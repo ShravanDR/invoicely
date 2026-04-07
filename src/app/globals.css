@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 20% 98%;
+    --foreground: 30 10% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 30 10% 12%;
+    --primary: 28 80% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 35 25% 94%;
+    --secondary-foreground: 30 10% 20%;
+    --muted: 35 15% 93%;
+    --muted-foreground: 30 5% 50%;
+    --accent: 35 25% 94%;
+    --accent-foreground: 30 10% 20%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 35 15% 89%;
+    --input: 35 15% 89%;
+    --ring: 28 80% 52%;
+    --radius: 0.75rem;
+
+    --editor-bg: 30 15% 96%;
+    --preview-bg: 220 10% 96%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* Smooth transitions for interactive elements */
+input, select, textarea, button, a {
+  @apply transition-all duration-150;
+}
+
+input:focus, select:focus, textarea:focus {
+  @apply outline-none ring-2 ring-primary/30 border-primary/40;
+}
+
+/* Custom scrollbar for preview panel */
+.preview-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.preview-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.preview-panel::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}

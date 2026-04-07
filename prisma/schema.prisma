@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  address   String?
+  phone     String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoices  Invoice[]
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  number      String?  @unique
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  description String
+  amount      Float
+  status      String   @default("draft") // draft | sent | paid | cancelled
+  invoiceDate DateTime
+  dueDate     DateTime
+  paidDate    DateTime?
+  tdsSection  String?   // TDS section: 194J, 194C, 194I, etc.
+  tdsRate     Float?    // TDS rate applied (e.g. 10 for 10%)
+  tdsAmount   Float?    // TDS deducted by client
+  netReceived Float?    // Actual amount received in bank
+  notes       String?
+  invoicePart    Int?     // Position in sequence: 1, 2, 3...
+  sequenceId     String?  // Shared ID linking all invoices in the same sequence
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lineItems   LineItem[]
+}
+
+model LineItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  details     String?  // Rich scope/breakdown text (optional, shown below description)
+  qty         Float   @default(1)
+  rate        Float
+  amount      Float   // qty * rate, stored for convenience
+  sortOrder   Int     @default(0)
+}
+
+model InvoiceCounter {
+  id      String @id // FY prefix, e.g. "FY27" for FY 2026-27
+  current Int    @default(0)
+}
+
+model BusinessProfile {
+  id            String   @id @default("default")
+  name          String   @default("")
+  address       String   @default("")
+  phone         String   @default("")
+  email         String   @default("")
+  bank          String   @default("")
+  ifsc          String   @default("")
+  accountNo     String   @default("")
+  accountName   String   @default("")
+  accountType   String   @default("Savings")
+  pan           String   @default("")
+  signatureB64  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
