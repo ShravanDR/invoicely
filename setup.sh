@@ -75,7 +75,8 @@ PLIST
 cat > "$APP_PATH/Contents/MacOS/launch" << LAUNCHER
 #!/bin/bash
 
-export PATH="/opt/homebrew/bin:\$PATH"
+# Support both Apple Silicon (/opt/homebrew) and Intel (/usr/local) Macs
+export PATH="/opt/homebrew/bin:/usr/local/bin:\$PATH"
 
 APP_DIR="$APP_DIR"
 PORT=$PORT
