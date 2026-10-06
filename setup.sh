@@ -51,6 +51,31 @@ echo "  Creating app shortcut..."
 mkdir -p "$APP_PATH/Contents/MacOS"
 mkdir -p "$APP_PATH/Contents/Resources"
 
+# Build the app icon from the favicon SVG (padded to the macOS icon grid)
+ICON_TMP="$(mktemp -d)"
+sed 's/width="32" height="32" viewBox="0 0 32 32"/width="1024" height="1024" viewBox="-3.88 -3.88 39.77 39.77"/' \
+    src/app/icon.svg > "$ICON_TMP/icon.svg"
+# Render with AppKit rather than qlmanage, which fills the transparent corners with white
+cat > "$ICON_TMP/render.swift" << 'SWIFT'
+import AppKit
+let args = CommandLine.arguments
+let img = NSImage(contentsOfFile: args[1])!
+let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 1024, pixelsHigh: 1024,
+                           bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                           colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+img.draw(in: NSRect(x: 0, y: 0, width: 1024, height: 1024))
+try! rep.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: args[2]))
+SWIFT
+swift "$ICON_TMP/render.swift" "$ICON_TMP/icon.svg" "$ICON_TMP/icon.png"
+mkdir -p "$ICON_TMP/icon.iconset"
+for s in 16 32 128 256 512; do
+    sips -z $s $s "$ICON_TMP/icon.png" --out "$ICON_TMP/icon.iconset/icon_${s}x${s}.png" > /dev/null
+    sips -z $((s*2)) $((s*2)) "$ICON_TMP/icon.png" --out "$ICON_TMP/icon.iconset/icon_${s}x${s}@2x.png" > /dev/null
+done
+iconutil -c icns "$ICON_TMP/icon.iconset" -o "$APP_PATH/Contents/Resources/icon.icns"
+rm -rf "$ICON_TMP"
+
 cat > "$APP_PATH/Contents/Info.plist" << PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -60,6 +85,8 @@ cat > "$APP_PATH/Contents/Info.plist" << PLIST
     <string>Invoicely</string>
     <key>CFBundleIdentifier</key>
     <string>com.invoicely.app</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
     <key>CFBundleVersion</key>
     <string>1.0</string>
     <key>CFBundleExecutable</key>
